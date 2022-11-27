@@ -14,8 +14,8 @@ import java.util.function.Predicate;
 public interface SeatRepository extends CrudRepository<Seat, UUID> {
     List<Seat> findAll();
 
-    List<Seat> findAllByRoom_Id(UUID id);
+    List<Seat> findAllByIdRoom(UUID id);
 
-    void deleteByRoom_Id(UUID id);
+    void deleteByIdRoom(UUID id);
 
 }

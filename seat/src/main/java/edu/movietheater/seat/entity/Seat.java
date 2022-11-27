@@ -24,8 +24,7 @@ public class Seat {
     @Column(name = "num_row", length = 2)
     private String row;
 
-    @ManyToOne
-    @JoinColumn(name = "id_room")
-    private Room room;
+    @Column(name = "id_room")
+    private UUID idRoom;
 
 }

@@ -20,4 +20,7 @@ public class Room {
     @Column(name = "name")
     private String name;
 
+    @Column(name = "capacity")
+    private Integer capacity;
+
 }

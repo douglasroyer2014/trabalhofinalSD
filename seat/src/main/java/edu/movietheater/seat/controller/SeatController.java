@@ -30,7 +30,7 @@ public class SeatController {
         if (seatOp.isPresent()) {
             return new ResponseEntity<>(seatOp.get(), HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -54,14 +54,14 @@ public class SeatController {
 
     @GetMapping("/room/{id}")
     public ResponseEntity getSeatsByRoom(@PathVariable UUID id) {
-        Iterable<Seat> all = this.repository.findAllByRoom_Id(id);
+        Iterable<Seat> all = this.repository.findAllByIdRoom(id);
         return new ResponseEntity<>(all, HttpStatus.OK);
     }
 
     @Transactional
     @DeleteMapping("/room/{id}")
     public ResponseEntity deleteSeatsByRoom(@PathVariable UUID id) {
-        this.repository.deleteByRoom_Id(id);
+        this.repository.deleteByIdRoom(id);
         return new ResponseEntity<>("Deletados com sucesso!", HttpStatus.OK);
     }
 

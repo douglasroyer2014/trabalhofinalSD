@@ -6,13 +6,10 @@ import edu.movietheater.room.dto.SeatDto;
 import edu.movietheater.room.entity.Room;
 import edu.movietheater.room.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,7 +47,7 @@ public class RoomController {
                     .build();
             return new ResponseEntity<>(roomDto, HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -66,7 +63,6 @@ public class RoomController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable UUID id) {
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
