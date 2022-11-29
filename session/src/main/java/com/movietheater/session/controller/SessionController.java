@@ -36,6 +36,7 @@ public class SessionController {
 
     @PostMapping
     public ResponseEntity<Session> create(@RequestBody Session session) {
+        session.setQntTicket(0L);
         Session save = this.repository.save(session);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
     }
