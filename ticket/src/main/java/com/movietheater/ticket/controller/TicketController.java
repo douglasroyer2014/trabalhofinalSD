@@ -6,9 +6,9 @@ import java.util.UUID;
 
 import javax.transaction.Transactional;
 
+import com.movietheater.ticket.RestClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +33,13 @@ public class TicketController {
     @Autowired
     MessagePublisher messagePublisher;
 
+    @Autowired
+    private RestClient restClient;
+
+    private static final String _SEAT_APPLICATION = "http://localhost:9002/seat";
+    private static final String _SESSION_APPLICATION = "http://localhost:9003/session";
+
+
     @GetMapping
     public List<Ticket> getAll() {
         return this.repository.findAll();
@@ -41,7 +48,7 @@ public class TicketController {
     @GetMapping("/{id}")
     public ResponseEntity getById(@PathVariable UUID id) {
         Optional<Ticket> ticket = this.repository.findById(id);
-        if (ticket.isEmpty()) {
+        if (ticket.isPresent()) {
             return new ResponseEntity<>(ticket.get(), HttpStatus.OK);
         }
         return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
@@ -49,6 +56,9 @@ public class TicketController {
 
     @PostMapping
     public ResponseEntity<Ticket> createTicket(@RequestBody Ticket ticket) {
+        ResponseEntity<Ticket> NOT_FOUND = verifyObjetsBeforeSave(ticket);
+        if (NOT_FOUND != null) return NOT_FOUND;
+
         Ticket save = this.repository.save(ticket);
         messagePublisher.publishMessage(save);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
@@ -56,6 +66,12 @@ public class TicketController {
 
     @PutMapping
     public ResponseEntity update(@RequestBody Ticket ticket) {
+        ResponseEntity<Ticket> NOT_FOUND = verifyObjetsBeforeSave(ticket);
+        if (NOT_FOUND != null) return NOT_FOUND;
+
+        if (!this.repository.existsById(ticket.getId()))
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+
         return new ResponseEntity<>(this.repository.save(ticket), HttpStatus.OK);
     }
 
@@ -73,7 +89,7 @@ public class TicketController {
     @Transactional
     @DeleteMapping("/session/{id}")
     public ResponseEntity deleteBySession(@PathVariable UUID id) {
-        this.repository.deleteById(id);
+        this.repository.deleteByIdSession(id);
         return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
     }
 
@@ -87,5 +103,27 @@ public class TicketController {
     public ResponseEntity deleteByIdSeat(@PathVariable UUID id) {
         this.repository.deleteByIdSeat(id);
         return new ResponseEntity("Deletado com sucesso!", HttpStatus.OK);
+    }
+
+
+    private ResponseEntity<Ticket> verifyObjetsBeforeSave(Ticket ticket) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        var httpEntity = new HttpEntity<>(headers);
+
+        var seatExists = this.restClient.template(restTemplate ->
+                restTemplate.exchange(_SEAT_APPLICATION+"/exists/"+ ticket.getIdSeat(), HttpMethod.GET, httpEntity, Boolean.class)
+        ).getBody();
+        if (!seatExists) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+
+        var sessionExists = this.restClient.template(restTemplate ->
+                restTemplate.exchange(_SESSION_APPLICATION+"/exists/"+ ticket.getIdSession(), HttpMethod.GET, httpEntity, Boolean.class)
+        ).getBody();
+        if (!sessionExists) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        return null;
     }
 }

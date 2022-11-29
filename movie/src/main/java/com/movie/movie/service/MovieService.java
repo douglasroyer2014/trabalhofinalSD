@@ -26,36 +26,46 @@ import com.movie.movie.repository.MovieRepository;
 public class MovieService {
 
     @Autowired
-    MovieRepository movieRepository;
+    MovieRepository repository;
 
     @Transactional
     @GetMapping()
     public @ResponseBody List<Movie> getMovies() {
-        return movieRepository.findAll();
+        return repository.findAll();
     }
 
     @Transactional
     @PostMapping()
     public ResponseEntity<Movie> createMovie(@RequestBody Movie movie) {
-        return new ResponseEntity<>(movieRepository.save(movie), HttpStatus.CREATED);
+        return new ResponseEntity<>(repository.save(movie), HttpStatus.CREATED);
     }
 
     @Transactional
     @GetMapping("/{id}")
     public ResponseEntity getMovie(@PathVariable UUID id) {
-        return new ResponseEntity<>(movieRepository.findById(id), HttpStatus.OK);
+        return new ResponseEntity<>(repository.findById(id), HttpStatus.OK);
+    }
+
+    @GetMapping("/exists/{id}")
+    public ResponseEntity verifyIfExists(@PathVariable UUID id) {
+        if (this.repository.existsById(id))
+            return new ResponseEntity<>(true, HttpStatus.OK);
+        else
+            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
     }
 
     @Transactional
     @PutMapping
-    public ResponseEntity putMovie(@RequestBody Movie movie) {
-        return new ResponseEntity<>(movieRepository.save(movie), HttpStatus.OK);
+    public ResponseEntity update(@RequestBody Movie movie) {
+        if (!this.repository.existsById(movie.getId()))
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(repository.save(movie), HttpStatus.OK);
     }
 
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity deleteMovie(@PathVariable UUID id) {
-        movieRepository.deleteById(id);
+        repository.deleteById(id);
         return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
     }
 }

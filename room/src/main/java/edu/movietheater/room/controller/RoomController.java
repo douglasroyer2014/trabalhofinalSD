@@ -20,12 +20,22 @@ public class RoomController {
     @Autowired
     private RoomRepository repository;
 
+    private static final String _SEAT_APPLICATION = "http://localhost:9002/seat";
+
     @Autowired
     private RestClient restClient;
 
     @GetMapping
     public List<Room> getAll() {
         return this.repository.findAll();
+    }
+
+    @GetMapping("/exists/{id}")
+    public ResponseEntity verifyIfExists(@PathVariable UUID id) {
+        if (this.repository.existsById(id))
+            return new ResponseEntity<>(true, HttpStatus.OK);
+        else
+            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/{id}")
@@ -38,7 +48,7 @@ public class RoomController {
 
             var httpEntity = new HttpEntity<>(headers);
             var seats = (List<SeatDto>) this.restClient.template(restTemplate ->
-                    restTemplate.exchange("http://localhost:9002/seat/room/"+room.getId(), HttpMethod.GET, httpEntity, Object.class)
+                    restTemplate.exchange(_SEAT_APPLICATION+"/"+room.getId(), HttpMethod.GET, httpEntity, Object.class)
             ).getBody();
             RoomDto roomDto = RoomDto.builder()
                     .id(room.getId())
@@ -53,11 +63,15 @@ public class RoomController {
 
     @PostMapping
     public ResponseEntity<Room> create(@RequestBody Room room) {
+        room.setCapacity(0);
         return new ResponseEntity<>(this.repository.save(room), HttpStatus.CREATED);
     }
 
     @PutMapping
     public ResponseEntity put(@RequestBody Room room) {
+        if (!this.repository.existsById(room.getId()))
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+
         return new ResponseEntity<>(this.repository.save(room), HttpStatus.OK);
     }
 
@@ -68,7 +82,7 @@ public class RoomController {
 
         var httpEntity = new HttpEntity<>(headers);
         this.restClient.template(restTemplate ->
-                restTemplate.exchange("http://localhost:9002/seat/room/"+id, HttpMethod.DELETE, httpEntity, Void.class)
+                restTemplate.exchange(_SEAT_APPLICATION+"/"+id, HttpMethod.DELETE, httpEntity, Void.class)
         );
 
         this.repository.deleteById(id);

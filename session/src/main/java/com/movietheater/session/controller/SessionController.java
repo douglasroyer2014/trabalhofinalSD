@@ -1,10 +1,10 @@
 package com.movietheater.session.controller;
 
+import com.movietheater.session.RestClient;
 import com.movietheater.session.entity.Session;
 import com.movietheater.session.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
@@ -18,6 +18,13 @@ public class SessionController {
 
     @Autowired
     private SessionRepository repository;
+
+    @Autowired
+    private RestClient restClient;
+
+    private static final String _MOVIE_APPLICATION = "http://localhost:9000/movie";
+    private static final String _ROOM_APPLICATION = "http://localhost:9001/room";
+    private static final String _TICKET_APPLICATION = "http://localhost:9004/ticket";
 
     @GetMapping
     public List<Session> getAll() {
@@ -36,13 +43,30 @@ public class SessionController {
 
     @PostMapping
     public ResponseEntity<Session> create(@RequestBody Session session) {
+        ResponseEntity<Session> NOT_FOUND = verifyObjetsBeforeSave(session);
+        if (NOT_FOUND != null) return NOT_FOUND;
+
         session.setQntTicket(0L);
         Session save = this.repository.save(session);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
     }
 
+    @GetMapping("/exists/{id}")
+    public ResponseEntity verifyIfExists(@PathVariable UUID id) {
+        if (this.repository.existsById(id))
+            return new ResponseEntity<>(true, HttpStatus.OK);
+        else
+            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
+    }
+
     @PutMapping
-    public ResponseEntity put(@RequestBody Session session) {
+    public ResponseEntity update(@RequestBody Session session) {
+        ResponseEntity<Session> NOT_FOUND = verifyObjetsBeforeSave(session);
+        if (NOT_FOUND != null) return NOT_FOUND;
+
+        if (!this.repository.existsById(session.getId()))
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+
         Session save = this.repository.save(session);
         return new ResponseEntity<>(save, HttpStatus.OK);
     }
@@ -77,6 +101,27 @@ public class SessionController {
     public ResponseEntity deleteSessionsByMovie(@PathVariable UUID id) {
         this.repository.deleteByIdMovie(id);
         return new ResponseEntity<>("Deletados com sucesso!", HttpStatus.OK);
+    }
+
+    private ResponseEntity<Session> verifyObjetsBeforeSave(Session session) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        var httpEntity = new HttpEntity<>(headers);
+
+        var roomExists = this.restClient.template(restTemplate ->
+                restTemplate.exchange(_ROOM_APPLICATION+"/exists/"+ session.getIdRoom(), HttpMethod.GET, httpEntity, Boolean.class)
+        ).getBody();
+        if (!roomExists) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+
+        var movieExists = this.restClient.template(restTemplate ->
+                restTemplate.exchange(_MOVIE_APPLICATION+"/exists/"+ session.getIdMovie(), HttpMethod.GET, httpEntity, Boolean.class)
+        ).getBody();
+        if (!movieExists) {
+            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        }
+        return null;
     }
 
 }
