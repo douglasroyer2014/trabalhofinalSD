@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,9 +46,10 @@ public class SeatController {
 
     @PostMapping
     public ResponseEntity<Seat> create(@RequestBody Seat seat) {
-        this.messagePublisher.publishMessage(seat, "addSeatRoom");
         ResponseEntity<Seat> NOT_FOUND = verifyObjetsBeforeSave(seat);
         if (NOT_FOUND != null) return NOT_FOUND;
+
+        this.messagePublisher.publishMessage(seat, "addSeatRoom");
 
         Seat save = this.repository.save(seat);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
@@ -57,9 +59,15 @@ public class SeatController {
     public ResponseEntity update(@RequestBody Seat seat) {
         ResponseEntity<Seat> NOT_FOUND = verifyObjetsBeforeSave(seat);
         if (NOT_FOUND != null) return NOT_FOUND;
+        Optional<Seat> seatOp = this.repository.findById(seat.getId());
+        if (seatOp.isEmpty())
+            return new ResponseEntity<>("Seat não encontrado para ser atualizado.", HttpStatus.NOT_FOUND);
 
-        if (!this.repository.existsById(seat.getId()))
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        Seat oldSeat = seatOp.get();
+        if (!Objects.equals(seat.getIdRoom(), oldSeat.getIdRoom())) {
+            this.messagePublisher.publishMessage(oldSeat, "removeSeat");
+            this.messagePublisher.publishMessage(seat, "addSeatRoom");
+        }
 
         Seat save = this.repository.save(seat);
         return new ResponseEntity<>(save, HttpStatus.OK);
