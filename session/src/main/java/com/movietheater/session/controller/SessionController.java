@@ -2,6 +2,7 @@ package com.movietheater.session.controller;
 
 import com.movietheater.session.RestClient;
 import com.movietheater.session.entity.Session;
+import com.movietheater.session.message.MessagePublisher;
 import com.movietheater.session.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -21,6 +22,9 @@ public class SessionController {
 
     @Autowired
     private RestClient restClient;
+
+    @Autowired
+    private MessagePublisher messagePublisher;
 
     private static final String _MOVIE_APPLICATION = "http://localhost:9000/movie";
     private static final String _ROOM_APPLICATION = "http://localhost:9001/room";
@@ -72,8 +76,13 @@ public class SessionController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable UUID id) {
-        this.repository.deleteById(id);
-        return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        Optional<Session> session = this.repository.findById(id);
+        if (session.isPresent()) {
+            this.repository.deleteById(id);
+            this.messagePublisher.publishMessage(session.get(), "removeSession");
+            return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Não foi encontrado a session", HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/room/{id}")
@@ -85,6 +94,8 @@ public class SessionController {
     @Transactional
     @DeleteMapping("/room/{id}")
     public ResponseEntity deleteSessionsByRoom(@PathVariable UUID id) {
+        List<Session> sessionList = this.repository.findAllByIdRoom(id);
+        sessionList.stream().forEach(session -> this.messagePublisher.publishMessage(session, "removeSession"));
         this.repository.deleteByIdRoom(id);
         return new ResponseEntity<>("Deletados com sucesso!", HttpStatus.OK);
     }
@@ -98,6 +109,8 @@ public class SessionController {
     @Transactional
     @DeleteMapping("/movie/{id}")
     public ResponseEntity deleteSessionsByMovie(@PathVariable UUID id) {
+        List<Session> sessionList = this.repository.findAllByIdMovie(id);
+        sessionList.stream().forEach(session -> this.messagePublisher.publishMessage(session, "removeSession"));
         this.repository.deleteByIdMovie(id);
         return new ResponseEntity<>("Deletados com sucesso!", HttpStatus.OK);
     }

@@ -23,9 +23,9 @@ public class MessageListener {
             case "removeSeat":
                 this.repository.deleteByIdSeat(UUID.fromString(message.getIdEntity()));
                 break;
-//            case "removeRoom":
-//                this.repository.deleteByIdRoom(UUID.fromString(message.getIdEntity()));
-//                break;
+            case "removeSession":
+                this.repository.deleteByIdSession(UUID.fromString(message.getIdEntity()));
+                break;
             default:
                 System.out.println(message.getMessageType());
                 break;
