@@ -46,7 +46,6 @@ public class SessionController {
         ResponseEntity<Session> NOT_FOUND = verifyObjetsBeforeSave(session);
         if (NOT_FOUND != null) return NOT_FOUND;
 
-        session.setQntTicket(0L);
         Session save = this.repository.save(session);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
     }

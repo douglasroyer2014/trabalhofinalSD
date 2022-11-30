@@ -2,6 +2,7 @@ package edu.movietheater.seat.controller;
 
 import edu.movietheater.seat.RestClient;
 import edu.movietheater.seat.entity.Seat;
+import edu.movietheater.seat.message.MessagePublisher;
 import edu.movietheater.seat.repository.SeatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -18,6 +19,9 @@ public class SeatController {
 
     @Autowired
     private SeatRepository repository;
+
+    @Autowired
+    private MessagePublisher messagePublisher;
 
     @Autowired
     private RestClient restClient;
@@ -41,6 +45,7 @@ public class SeatController {
 
     @PostMapping
     public ResponseEntity<Seat> create(@RequestBody Seat seat) {
+        this.messagePublisher.publishMessage(seat, "addSeatRoom");
         ResponseEntity<Seat> NOT_FOUND = verifyObjetsBeforeSave(seat);
         if (NOT_FOUND != null) return NOT_FOUND;
 
@@ -70,8 +75,13 @@ public class SeatController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable UUID id) {
-        this.repository.deleteById(id);
-        return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        Optional<Seat> seat = this.repository.findById(id);
+        if (seat.isPresent()) {
+            this.messagePublisher.publishMessage(seat.get(), "removeSeat");
+            this.repository.deleteById(id);
+            return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Não foi encontrado!", HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/room/{id}")
@@ -83,6 +93,10 @@ public class SeatController {
     @Transactional
     @DeleteMapping("/room/{id}")
     public ResponseEntity deleteSeatsByRoom(@PathVariable UUID id) {
+        List<Seat> seatList = this.repository.findAllByIdRoom(id);
+        seatList.stream().forEach(seat -> {
+            this.messagePublisher.publishMessage(seat, "removeSeat");
+        });
         this.repository.deleteByIdRoom(id);
         return new ResponseEntity<>("Deletados com sucesso!", HttpStatus.OK);
     }

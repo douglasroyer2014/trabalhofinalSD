@@ -19,9 +19,4 @@ public interface SessionRepository extends CrudRepository<Session, UUID> {
     List<Session> findAllByIdMovie(UUID id);
     void deleteByIdMovie(UUID id);
 
-    @Transactional
-    @Modifying
-    @Query("update Session s set s.qntTicket = ?1 where s.id = ?2")
-    int updateQntTicketById(Long qntTicket, UUID id);
-
 }

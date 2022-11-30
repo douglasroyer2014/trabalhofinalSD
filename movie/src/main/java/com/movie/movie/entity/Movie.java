@@ -21,6 +21,6 @@ public class Movie {
     private String name;
 
     @Column(name = "classification")
-    private Long classification;
+    private Short classification;
 
 }

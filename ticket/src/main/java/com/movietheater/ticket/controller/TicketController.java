@@ -16,11 +16,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.movietheater.ticket.entity.Ticket;
-import com.movietheater.ticket.message.MessagePublisher;
 import com.movietheater.ticket.repository.TicketRepository;
 
 @RestController
@@ -29,9 +27,6 @@ public class TicketController {
 
     @Autowired
     TicketRepository repository;
-
-    @Autowired
-    MessagePublisher messagePublisher;
 
     @Autowired
     private RestClient restClient;
@@ -55,12 +50,15 @@ public class TicketController {
     }
 
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(@RequestBody Ticket ticket) {
+    public ResponseEntity createTicket(@RequestBody Ticket ticket) {
         ResponseEntity<Ticket> NOT_FOUND = verifyObjetsBeforeSave(ticket);
         if (NOT_FOUND != null) return NOT_FOUND;
 
+        Optional<Ticket> ticketExist =this.repository.findByIdSessionAndIdSeat(ticket.getIdSession(),  ticket.getIdSeat());
+        if (ticketExist.isPresent()) {
+            return new ResponseEntity<>("Esse ticket já existe", HttpStatus.BAD_REQUEST);
+        }
         Ticket save = this.repository.save(ticket);
-        messagePublisher.publishMessage(save);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
     }
 
@@ -78,7 +76,11 @@ public class TicketController {
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable UUID id) {
         this.repository.deleteById(id);
-        return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        Optional<Ticket> ticket = this.repository.findById(id);
+        if (ticket.isPresent()) {
+            return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Não encontrado ticket!", HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/session/{id}")
@@ -90,7 +92,11 @@ public class TicketController {
     @DeleteMapping("/session/{id}")
     public ResponseEntity deleteBySession(@PathVariable UUID id) {
         this.repository.deleteByIdSession(id);
-        return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        List<Ticket> ticketList = this.repository.findAllByIdSession(id);
+        if (!ticketList.isEmpty()) {
+            return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Não foi encontrado session!", HttpStatus.NOT_FOUND);
     }
 
     @GetMapping("/seat/{id}")
@@ -102,7 +108,11 @@ public class TicketController {
     @DeleteMapping("/seat/{id}")
     public ResponseEntity deleteByIdSeat(@PathVariable UUID id) {
         this.repository.deleteByIdSeat(id);
-        return new ResponseEntity("Deletado com sucesso!", HttpStatus.OK);
+        List<Ticket> ticketList = this.repository.findAllByIdSeat(id);
+        if(!ticketList.isEmpty()) {
+            return new ResponseEntity("Deletado com sucesso!", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Não foi encontrado seat!", HttpStatus.NOT_FOUND);
     }
 
 

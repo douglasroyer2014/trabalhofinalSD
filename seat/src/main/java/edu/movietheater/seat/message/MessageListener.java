@@ -1,4 +1,4 @@
-package com.movietheater.session.message;
+package edu.movietheater.seat.message;
 
 import java.util.UUID;
 
@@ -8,21 +8,18 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.movietheater.session.repository.SessionRepository;
+import edu.movietheater.seat.repository.SeatRepository;
 
 @Service
 public class MessageListener {
 
     @Autowired
-    SessionRepository repository;
+    SeatRepository repository;
 
     @Transactional
     @RabbitListener(queues = MQConfig.QUEUE)
     public void listener(CustomMessage message) {
         switch (message.getMessageType()) {
-            case "removeMovie":
-                this.repository.deleteByIdMovie(UUID.fromString(message.getIdEntity()));
-                break;
             case "removeRoom":
                 this.repository.deleteByIdRoom(UUID.fromString(message.getIdEntity()));
                 break;

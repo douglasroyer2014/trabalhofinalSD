@@ -1,4 +1,4 @@
-package com.movietheater.session.message;
+package com.movie.movie.message;
 
 import java.util.Date;
 
@@ -18,5 +18,4 @@ public class CustomMessage {
     private String idEntity;
     private String messageType;
     private Object object;
-
 }

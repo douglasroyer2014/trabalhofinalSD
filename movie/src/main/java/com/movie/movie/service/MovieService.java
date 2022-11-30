@@ -1,6 +1,7 @@
 package com.movie.movie.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.transaction.Transactional;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.movie.movie.entity.Movie;
+import com.movie.movie.message.MessagePublisher;
 import com.movie.movie.repository.MovieRepository;
 
 @RestController
@@ -27,6 +29,9 @@ public class MovieService {
 
     @Autowired
     MovieRepository repository;
+
+    @Autowired
+    MessagePublisher messagePublisher;
 
     @Transactional
     @GetMapping()
@@ -65,7 +70,12 @@ public class MovieService {
     @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity deleteMovie(@PathVariable UUID id) {
-        repository.deleteById(id);
-        return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        Optional<Movie> movie = this.repository.findById(id);
+        if (movie.isPresent()) {
+            repository.deleteById(id);
+            this.messagePublisher.publishMessage(movie.get(), "removeMovie");
+            return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Não foi encontrado o filme", HttpStatus.NOT_FOUND);
     }
 }

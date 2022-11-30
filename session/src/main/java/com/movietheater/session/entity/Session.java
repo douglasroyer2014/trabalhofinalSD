@@ -31,7 +31,4 @@ public class Session {
 
     @Column(name = "close_sale")
     private LocalDateTime closeSale;
-
-    @Column(name = "qnt_ticket")
-    private Long qntTicket;
 }

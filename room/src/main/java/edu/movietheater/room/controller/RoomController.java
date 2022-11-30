@@ -4,6 +4,7 @@ import edu.movietheater.room.RestClient;
 import edu.movietheater.room.dto.RoomDto;
 import edu.movietheater.room.dto.SeatDto;
 import edu.movietheater.room.entity.Room;
+import edu.movietheater.room.message.MessagePublisher;
 import edu.movietheater.room.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -19,6 +20,9 @@ public class RoomController {
 
     @Autowired
     private RoomRepository repository;
+
+    @Autowired
+    private MessagePublisher messagePublisher;
 
     private static final String _SEAT_APPLICATION = "http://localhost:9002/seat";
 
@@ -77,16 +81,13 @@ public class RoomController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable UUID id) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        var httpEntity = new HttpEntity<>(headers);
-        this.restClient.template(restTemplate ->
-                restTemplate.exchange(_SEAT_APPLICATION+"/"+id, HttpMethod.DELETE, httpEntity, Void.class)
-        );
-
-        this.repository.deleteById(id);
-        return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        Optional<Room> room = this.repository.findById(id);
+        if (room.isPresent()) {
+            this.messagePublisher.publishMessage(room.get(), "removeRoom");
+            this.repository.deleteById(id);
+            return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("Não foi encontrado", HttpStatus.NOT_FOUND);
     }
 
 }

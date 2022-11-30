@@ -1,4 +1,4 @@
-package com.movietheater.session.message;
+package edu.movietheater.seat.message;
 
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Binding;

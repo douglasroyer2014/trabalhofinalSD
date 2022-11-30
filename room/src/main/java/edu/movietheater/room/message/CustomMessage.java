@@ -1,4 +1,4 @@
-package com.movietheater.session.message;
+package edu.movietheater.room.message;
 
 import java.util.Date;
 

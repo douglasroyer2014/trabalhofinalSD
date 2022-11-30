@@ -14,8 +14,9 @@ import lombok.ToString;
 public class CustomMessage {
 
     private String messageId;
-    private String message;
     private Date messageDate;
-    private String idSession;
+    private String idEntity;
+    private String messageType;
+    private Object object;
 
 }
