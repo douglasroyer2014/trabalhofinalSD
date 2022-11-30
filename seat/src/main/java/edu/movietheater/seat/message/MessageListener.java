@@ -17,7 +17,7 @@ public class MessageListener {
     SeatRepository repository;
 
     @Transactional
-    @RabbitListener(queues = MQConfig.QUEUE)
+    @RabbitListener(queues = MQConfig.ROOM)
     public void listener(CustomMessage message) {
         switch (message.getMessageType()) {
             case "removeRoom":

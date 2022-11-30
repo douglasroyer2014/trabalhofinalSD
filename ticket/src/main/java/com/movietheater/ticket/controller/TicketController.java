@@ -65,9 +65,9 @@ public class TicketController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable UUID id) {
-        this.repository.deleteById(id);
         Optional<Ticket> ticket = this.repository.findById(id);
         if (ticket.isPresent()) {
+            this.repository.deleteById(id);
             return new ResponseEntity<>("Deletado com sucesso!", HttpStatus.OK);
         }
         return new ResponseEntity<>("Não encontrado ticket!", HttpStatus.NOT_FOUND);

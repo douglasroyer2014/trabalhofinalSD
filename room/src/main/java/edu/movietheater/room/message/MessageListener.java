@@ -21,7 +21,7 @@ public class MessageListener {
     RoomRepository repository;
 
     @Transactional
-    @RabbitListener(queues = MQConfig.QUEUE)
+    @RabbitListener(queues = MQConfig.SEAT)
     public void listener(CustomMessage message) {
         String idRoom = (String)((LinkedHashMap) message.getObject()).get("idRoom");
         Optional<Room> room = this.repository.findById(UUID.fromString(idRoom));

@@ -1,6 +1,5 @@
 package com.movietheater.session.entity;
 
-
 import lombok.Data;
 
 import javax.persistence.*;

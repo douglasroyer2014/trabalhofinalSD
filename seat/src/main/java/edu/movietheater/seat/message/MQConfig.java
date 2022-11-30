@@ -15,13 +15,19 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MQConfig {
 
-    public static final String QUEUE = "message_queue";
+    public static final String QUEUE = "seat_queue";
     public static final String EXCHANGE = "message_exchange";
     public static final String ROUTING_KEY = "message_routingKey";
+    public static final String ROOM = "room_queue";
 
     @Bean
     public Queue queue() {
         return new Queue(QUEUE);
+    }
+
+    @Bean
+    public Queue room() {
+        return new Queue(ROOM);
     }
 
     @Bean

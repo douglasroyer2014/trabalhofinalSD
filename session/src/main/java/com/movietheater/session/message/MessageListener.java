@@ -17,8 +17,9 @@ public class MessageListener {
     SessionRepository repository;
 
     @Transactional
-    @RabbitListener(queues = MQConfig.QUEUE)
-    public void listener(CustomMessage message) {
+    @RabbitListener(queues = MQConfig.MOVIE)
+    @RabbitListener(queues = MQConfig.ROOM)
+    public void listenerMovie(CustomMessage message) {
         switch (message.getMessageType()) {
             case "removeMovie":
                 this.repository.deleteByIdMovie(UUID.fromString(message.getIdEntity()));

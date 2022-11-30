@@ -18,10 +18,9 @@ public class MessagePublisher {
     public void publishMessage(Session session, String messageType) {
         CustomMessage message = new CustomMessage();
         message.setMessageId(UUID.randomUUID().toString());
-        message.setMessageDate(new Date());
         message.setIdEntity(session.getId().toString());
-        message.setObject(session);
         message.setMessageType(messageType);
+
         template.convertAndSend(MQConfig.EXCHANGE,
                                 MQConfig.ROUTING_KEY, message);
     }

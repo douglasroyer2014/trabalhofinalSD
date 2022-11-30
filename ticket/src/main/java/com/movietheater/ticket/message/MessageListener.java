@@ -17,14 +17,15 @@ public class MessageListener {
     TicketRepository repository;
 
     @Transactional
-    @RabbitListener(queues = MQConfig.QUEUE)
-    public void listener(CustomMessage message) {
+    @RabbitListener(queues = MQConfig.SESSION)
+    @RabbitListener(queues = MQConfig.SEAT)
+    public void listenerSession(CustomMessage message){
         switch (message.getMessageType()) {
-            case "removeSeat":
-                this.repository.deleteByIdSeat(UUID.fromString(message.getIdEntity()));
-                break;
             case "removeSession":
                 this.repository.deleteByIdSession(UUID.fromString(message.getIdEntity()));
+                break;
+            case "removeSeat":
+                this.repository.deleteByIdSeat(UUID.fromString(message.getIdEntity()));
                 break;
             default:
                 System.out.println(message.getMessageType());
