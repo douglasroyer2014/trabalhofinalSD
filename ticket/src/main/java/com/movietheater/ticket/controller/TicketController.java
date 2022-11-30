@@ -1,5 +1,6 @@
 package com.movietheater.ticket.controller;
 
+import java.net.ConnectException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,21 +57,10 @@ public class TicketController {
 
         Optional<Ticket> ticketExist =this.repository.findByIdSessionAndIdSeat(ticket.getIdSession(),  ticket.getIdSeat());
         if (ticketExist.isPresent()) {
-            return new ResponseEntity<>("Esse ticket já existe", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Esse lugar já está ocupado!", HttpStatus.BAD_REQUEST);
         }
         Ticket save = this.repository.save(ticket);
         return new ResponseEntity<>(save, HttpStatus.CREATED);
-    }
-
-    @PutMapping
-    public ResponseEntity update(@RequestBody Ticket ticket) {
-        ResponseEntity<Ticket> NOT_FOUND = verifyObjetsBeforeSave(ticket);
-        if (NOT_FOUND != null) return NOT_FOUND;
-
-        if (!this.repository.existsById(ticket.getId()))
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-
-        return new ResponseEntity<>(this.repository.save(ticket), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
@@ -115,25 +105,33 @@ public class TicketController {
         return new ResponseEntity<>("Não foi encontrado seat!", HttpStatus.NOT_FOUND);
     }
 
-
-    private ResponseEntity<Ticket> verifyObjetsBeforeSave(Ticket ticket) {
+    private ResponseEntity verifyObjetsBeforeSave(Ticket ticket) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         var httpEntity = new HttpEntity<>(headers);
 
-        var seatExists = this.restClient.template(restTemplate ->
-                restTemplate.exchange(_SEAT_APPLICATION+"/exists/"+ ticket.getIdSeat(), HttpMethod.GET, httpEntity, Boolean.class)
-        ).getBody();
-        if (!seatExists) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var seatExists = this.restClient.template(restTemplate ->
+                    restTemplate.exchange(_SEAT_APPLICATION + "/exists/" + ticket.getIdSeat(), HttpMethod.GET, httpEntity, Boolean.class)
+            ).getBody();
+            if (!seatExists) {
+                return new ResponseEntity<>("Poltrona não encontrada!", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception ce) {
+            return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Seat'!", HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        var sessionExists = this.restClient.template(restTemplate ->
-                restTemplate.exchange(_SESSION_APPLICATION+"/exists/"+ ticket.getIdSession(), HttpMethod.GET, httpEntity, Boolean.class)
-        ).getBody();
-        if (!sessionExists) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var sessionExists = this.restClient.template(restTemplate ->
+                    restTemplate.exchange(_SESSION_APPLICATION+"/exists/"+ ticket.getIdSession(), HttpMethod.GET, httpEntity, Boolean.class)
+            ).getBody();
+            if (!sessionExists) {
+                return new ResponseEntity<>("Sessão não encontrada!", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception ce) {
+            return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Sessão'!", HttpStatus.SERVICE_UNAVAILABLE);
         }
+
         return null;
     }
 }

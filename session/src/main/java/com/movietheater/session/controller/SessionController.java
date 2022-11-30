@@ -115,23 +115,31 @@ public class SessionController {
         return new ResponseEntity<>("Deletados com sucesso!", HttpStatus.OK);
     }
 
-    private ResponseEntity<Session> verifyObjetsBeforeSave(Session session) {
+    private ResponseEntity verifyObjetsBeforeSave(Session session) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         var httpEntity = new HttpEntity<>(headers);
 
-        var roomExists = this.restClient.template(restTemplate ->
-                restTemplate.exchange(_ROOM_APPLICATION+"/exists/"+ session.getIdRoom(), HttpMethod.GET, httpEntity, Boolean.class)
-        ).getBody();
-        if (!roomExists) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var roomExists = this.restClient.template(restTemplate ->
+                    restTemplate.exchange(_ROOM_APPLICATION+"/exists/"+ session.getIdRoom(), HttpMethod.GET, httpEntity, Boolean.class)
+            ).getBody();
+            if (!roomExists) {
+                return new ResponseEntity<>("Room não encontrado!", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception ce) {
+            return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Room'!", HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        var movieExists = this.restClient.template(restTemplate ->
-                restTemplate.exchange(_MOVIE_APPLICATION+"/exists/"+ session.getIdMovie(), HttpMethod.GET, httpEntity, Boolean.class)
-        ).getBody();
-        if (!movieExists) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var movieExists = this.restClient.template(restTemplate ->
+                    restTemplate.exchange(_MOVIE_APPLICATION+"/exists/"+ session.getIdMovie(), HttpMethod.GET, httpEntity, Boolean.class)
+            ).getBody();
+            if (!movieExists) {
+                return new ResponseEntity<>("Movie não encontrado!", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception ce) {
+            return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Movie'!", HttpStatus.SERVICE_UNAVAILABLE);
         }
         return null;
     }

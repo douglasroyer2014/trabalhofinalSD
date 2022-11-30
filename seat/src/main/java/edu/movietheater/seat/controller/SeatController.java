@@ -101,16 +101,20 @@ public class SeatController {
         return new ResponseEntity<>("Deletados com sucesso!", HttpStatus.OK);
     }
 
-    private ResponseEntity<Seat> verifyObjetsBeforeSave(Seat seat) {
+    private ResponseEntity verifyObjetsBeforeSave(Seat seat) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         var httpEntity = new HttpEntity<>(headers);
 
-        var roomExists = this.restClient.template(restTemplate ->
-                restTemplate.exchange(_ROOM_APPLICATION+"/exists/"+ seat.getIdRoom(), HttpMethod.GET, httpEntity, Boolean.class)
-        ).getBody();
-        if (!roomExists) {
-            return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+        try {
+            var roomExists = this.restClient.template(restTemplate ->
+                    restTemplate.exchange(_ROOM_APPLICATION+"/exists/"+ seat.getIdRoom(), HttpMethod.GET, httpEntity, Boolean.class)
+            ).getBody();
+            if (!roomExists) {
+                return new ResponseEntity<>("Room não encontrado", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception ce) {
+            return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Room'!", HttpStatus.SERVICE_UNAVAILABLE);
         }
         return null;
     }

@@ -26,4 +26,10 @@ public class Ticket {
     @Column(name = "id_seat")
     private UUID idSeat;
 
+    @Column(name = "person_name")
+    private String personName;
+
+    @Column(name = "person_cpf", length = 11)
+    private String personCpf;
+
 }
