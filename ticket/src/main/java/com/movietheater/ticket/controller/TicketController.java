@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.annotation.Resource;
 import javax.transaction.Transactional;
 
 import com.movietheater.ticket.RestClient;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import com.movietheater.ticket.entity.Ticket;
 import com.movietheater.ticket.repository.TicketRepository;
@@ -111,14 +114,13 @@ public class TicketController {
         var httpEntity = new HttpEntity<>(headers);
 
         try {
-            var seatExists = this.restClient.template(restTemplate ->
+            this.restClient.template(restTemplate ->
                     restTemplate.exchange(_SEAT_APPLICATION + "/exists/" + ticket.getIdSeat(), HttpMethod.GET, httpEntity, Boolean.class)
-            ).getBody();
-            if (!seatExists) {
-                return new ResponseEntity<>("Poltrona não encontrada!", HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception ce) {
+            );
+        } catch (ResourceAccessException ce) {
             return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Seat'!", HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (HttpClientErrorException hcee) {
+            return new ResponseEntity<>("Poltrona não encontrada!", HttpStatus.NOT_FOUND);
         }
 
         try {

@@ -52,7 +52,7 @@ public class RoomController {
 
             var httpEntity = new HttpEntity<>(headers);
             var seats = (List<SeatDto>) this.restClient.template(restTemplate ->
-                    restTemplate.exchange(_SEAT_APPLICATION+"/"+room.getId(), HttpMethod.GET, httpEntity, Object.class)
+                    restTemplate.exchange(_SEAT_APPLICATION+"/room/"+room.getId(), HttpMethod.GET, httpEntity, Object.class)
             ).getBody();
             RoomDto roomDto = RoomDto.builder()
                     .id(room.getId())

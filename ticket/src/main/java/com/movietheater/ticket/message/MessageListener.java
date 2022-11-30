@@ -18,7 +18,6 @@ public class MessageListener {
 
     @Transactional
     @RabbitListener(queues = MQConfig.SESSION)
-    @RabbitListener(queues = MQConfig.SEAT)
     public void listenerSession(CustomMessage message){
         switch (message.getMessageType()) {
             case "removeSession":

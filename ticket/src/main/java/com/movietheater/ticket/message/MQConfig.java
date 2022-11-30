@@ -14,17 +14,11 @@ public class MQConfig {
     public static final String QUEUE = "ticket_queue";
     public static final String EXCHANGE = "message_exchange";
     public static final String ROUTING_KEY = "message_routingKey";
-    public static final String SEAT = "seat_queue";
     public static final String SESSION = "session_queue";
 
     @Bean
     public Queue queue() {
         return new Queue(QUEUE);
-    }
-
-    @Bean
-    public Queue seat() {
-        return new Queue(SEAT);
     }
 
     @Bean
