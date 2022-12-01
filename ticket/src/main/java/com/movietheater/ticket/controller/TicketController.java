@@ -130,8 +130,10 @@ public class TicketController {
             if (!sessionExists) {
                 return new ResponseEntity<>("Sessão não encontrada!", HttpStatus.NOT_FOUND);
             }
-        } catch (Exception ce) {
+        } catch (ResourceAccessException ce) {
             return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Sessão'!", HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (HttpClientErrorException hcee) {
+            return new ResponseEntity<>("Sessão não encontrada!", HttpStatus.NOT_FOUND);
         }
 
         return null;

@@ -7,6 +7,8 @@ import com.movietheater.session.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import javax.transaction.Transactional;
 import java.util.List;
@@ -127,8 +129,10 @@ public class SessionController {
             if (!roomExists) {
                 return new ResponseEntity<>("Room não encontrado!", HttpStatus.NOT_FOUND);
             }
-        } catch (Exception ce) {
+        } catch (ResourceAccessException ce) {
             return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Room'!", HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (HttpClientErrorException hcee) {
+            return new ResponseEntity<>("Sala não encontrada!", HttpStatus.NOT_FOUND);
         }
 
         try {
@@ -138,8 +142,10 @@ public class SessionController {
             if (!movieExists) {
                 return new ResponseEntity<>("Movie não encontrado!", HttpStatus.NOT_FOUND);
             }
-        } catch (Exception ce) {
+        } catch (ResourceAccessException ce) {
             return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Movie'!", HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (HttpClientErrorException hcee) {
+            return new ResponseEntity<>("Filme não encontrado!", HttpStatus.NOT_FOUND);
         }
         return null;
     }

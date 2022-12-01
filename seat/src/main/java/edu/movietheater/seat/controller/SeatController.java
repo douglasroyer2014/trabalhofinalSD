@@ -7,6 +7,8 @@ import edu.movietheater.seat.repository.SeatRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 
 import javax.transaction.Transactional;
 import java.util.List;
@@ -121,8 +123,10 @@ public class SeatController {
             if (!roomExists) {
                 return new ResponseEntity<>("Room não encontrado", HttpStatus.NOT_FOUND);
             }
-        } catch (Exception ce) {
+        } catch (ResourceAccessException ce) {
             return new ResponseEntity<>("Falha ao se conectar a aplicação de 'Room'!", HttpStatus.SERVICE_UNAVAILABLE);
+        } catch (HttpClientErrorException hcee) {
+            return new ResponseEntity<>("Room não encontrado!", HttpStatus.NOT_FOUND);
         }
         return null;
     }
